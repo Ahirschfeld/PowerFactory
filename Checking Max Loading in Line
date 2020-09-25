@@ -1,0 +1,34 @@
+! DPL to access network elements using a General Selection
+! SUMMARY: General Selection can be included inside the DPL command object
+! or referenced as a General Selection
+!-------------------------------------------------------------
+
+!1. VARIABLE DEFINITION
+int iError;
+double dmaxload;
+object oLine, Omax, oLdf;
+set S;
+
+!2. PROCEDURE
+ClearOutputWindow(); ! Clears the output window
+oLdf = GetCaseObject('ComLdf');
+iError = oLdf.Execute(); ! Execute a load-flow
+if (iError){exit()}; ! Exit on error
+S = AllRelevant('*.ElmLne'); ! Get all the selected lines
+Omax = S.First(); ! Get the first line
+if(Omax){
+  dmaxload = Omax:c:loading; ! Initialise maximum
+} else{
+  printf('No lines found in this selection');
+  exit();
+}
+oLine = S.Next(); ! Get next line
+while(oLine){
+  if(oLine:c:loading>dmaxload){
+    dmaxload = oLine:c:loading; ! Update maximum
+    Omax = oLine; ! Update max loaded line
+  }
+  oLine = S.Next();
+}
+printf('Maximum loading is for %o, with %d', Omax, Omax:c:loading);
+Omax.ShowFullName();
